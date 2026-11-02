@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full font-sans antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Afrão IA - Ultra Chatbot iOS</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ios: {
+                            blue: '#007AFF',
+                            green: '#34C759',
+                            bg: '#F2F2F7',
+                            card: '#FFFFFF',
+                            darkBg: '#000000',
+                            darkCard: '#1C1C1E',
+                            gray: '#8E8E93',
+                            border: 'rgba(60, 60, 67, 0.12)',
+                            darkBorder: 'rgba(235, 235, 245, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome & Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar for iOS feel */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(142, 142, 147, 0.3); border-radius: 99px; }
+        
+        /* Glassmorphism & Micro Animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .dark .glass {
+            background: rgba(28, 28, 30, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        /* Rich Formatting & Markdown Overrides */
+        .prose { font-size: 0.85rem; line-height: 1.5; }
+        .prose p { margin-bottom: 0.5rem; }
+        .prose p:last-child { margin-bottom: 0; }
+        .prose strong { font-weight: 700; color: inherit; }
+        .prose em { font-style: italic; }
+        .prose ul { list-style-type: disc; padding-left: 1.2rem; margin: 0.4rem 0; }
+        .prose ol { list-style-type: decimal; padding-left: 1.2rem; margin: 0.4rem 0; }
+        .prose blockquote { border-left: 3px solid #007AFF; padding-left: 0.75rem; margin: 0.5rem 0; opacity: 0.85; font-style: italic; }
+        .prose code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 6px; font-size: 0.82em; font-family: monospace; }
+        .dark .prose code { background: rgba(255,255,255,0.12); }
+        .prose pre { background: #18181b; color: #f4f4f5; padding: 12px; border-radius: 12px; overflow-x: auto; font-size: 0.8rem; margin: 8px 0; }
+        .prose table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.8rem; }
+        .prose th, .prose td { border: 1px solid rgba(142, 142, 147, 0.3); padding: 6px 10px; text-align: left; }
+        .prose th { background: rgba(0,0,0,0.05); }
+        .dark .prose th { background: rgba(255,255,255,0.05); }
+
+        .pulse-mic {
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="h-full bg-ios-bg dark:bg-ios-darkBg text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300 select-none overflow-hidden">
+
+    <!-- Main Container -->
+    <div class="relative flex h-full w-full max-w-6xl mx-auto overflow-hidden md:py-4 md:px-4">
+        
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed md:relative inset-y-0 left-0 z-40 w-72 bg-white/95 dark:bg-ios-darkCard/95 border-r border-ios-border dark:border-ios-darkBorder flex flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out md:rounded-3xl md:border shadow-2xl md:shadow-none my-0 md:mr-3">
+            
+            <!-- Sidebar Header -->
+            <div class="p-4 flex items-center justify-between border-b border-ios-border dark:border-ios-darkBorder">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-ios-blue via-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        A
+                    </div>
+                    <div>
+                        <span class="font-semibold text-sm tracking-tight block leading-tight">Afrão IA</span>
+                        <span class="text-[10px] text-ios-gray font-medium">Ultra Bot Pro</span>
+                    </div>
+                </div>
+                <button onclick="createNewChat()" title="Nova Conversa" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-ios-blue transition-colors">
+                    <i class="fa-solid fa-pen-to-square text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Personality Quick Switcher -->
+            <div class="px-3 py-2 border-b border-ios-border dark:border-ios-darkBorder bg-slate-50/50 dark:bg-slate-900/30">
+                <label class="text-[9px] font-bold text-ios-gray uppercase tracking-wider block mb-1">Personalidade Ativa</label>
+                <select id="sidebar-personality-select" onchange="changePersonality(this.value)" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none">
+                    <option value="default">Afrão Padrão (Assistente iOS)</option>
+                    <option value="programmer">Dev Senior (Especialista Código)</option>
+                    <option value="creative">Escritor Criativo & Poeta</option>
+                    <option value="sarcastic">Afrão Sarcástico & Irônico</option>
+                    <option value="teacher">Professor Explicativo</option>
+                    <option value="custom">Personalidade Customizada</option>
+                </select>
+            </div>
+
+            <!-- Chat History List -->
+            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="chat-list">
+                <!-- Dynamic Chat Items -->
+            </div>
+
+            <!-- Sidebar Footer / Settings -->
+            <div class="p-3 border-t border-ios-border dark:border-ios-darkBorder flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30">
+                <button onclick="toggleTheme()" class="flex items-center gap-2 text-xs font-medium text-ios-gray hover:text-slate-900 dark:hover:text-white transition-colors px-2 py-1.5 rounded-xl">
+                    <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+                    <span id="theme-text">Modo Escuro</span>
+                </button>
+                <button onclick="openSettings()" title="Configurações" class="w-8 h-8 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800 flex items-center justify-center text-ios-gray hover:text-slate-900 dark:hover:text-white transition-colors">
+                    <i class="fa-solid fa-gear text-sm"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Mobile Overlay -->
+        <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden md:hidden"></div>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col h-full bg-white dark:bg-ios-darkCard md:rounded-3xl border-0 md:border border-ios-border dark:border-ios-darkBorder overflow-hidden shadow-sm">
+            
+            <!-- Header Navbar -->
+            <header class="h-14 glass border-b border-ios-border dark:border-ios-darkBorder px-4 flex items-center justify-between shrink-0 z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar(true)" class="md:hidden w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-ios-blue">
+                        <i class="fa-solid fa-bars text-base"></i>
+                    </button>
+                    <div>
+                        <h1 id="current-chat-title" class="text-xs font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-none truncate max-w-[180px] sm:max-w-xs">Nova Conversa</h1>
+                        <span id="current-personality-badge" class="text-[10px] text-ios-gray font-medium">Afrão IA • Padrão</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleTTS()" id="tts-btn" title="Voz do Assistente" class="text-xs font-medium text-ios-gray hover:text-ios-blue transition-colors w-8 h-8 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-volume-high text-sm"></i>
+                    </button>
+                    <button onclick="clearCurrentChat()" title="Limpar conversa" class="text-xs font-medium text-rose-500 hover:text-rose-600 transition-colors px-2 py-1 rounded-lg">
+                        Limpar
+                    </button>
+                </div>
+            </header>
+
+            <!-- Messages Log -->
+            <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+                
+                <!-- Welcome Banner -->
+                <div id="empty-state" class="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 max-w-md mx-auto">
+                    <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-ios-blue via-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl shadow-xl shadow-ios-blue/20">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold tracking-tight">O que vamos criar hoje?</h2>
+                        <p class="text-xs text-ios-gray mt-1">Anexe imagens, vídeos, áudios ou documentos. Escreva usando formatação rica com **negrito**, *italico*, listas e códigos!</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2 pt-2">
+                        <button onclick="usePrompt('Explique como funciona buraco negro com **formatação rica** e tópicos')" class="p-3 text-left bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl text-[11px] transition-colors border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-2">
+                            <i class="fa-solid fa-align-left text-ios-blue"></i>
+                            <span>Explicação com <strong>Formatação</strong></span>
+                        </button>
+                        <button onclick="usePrompt('Crie um código em JavaScript para ordenar uma lista')" class="p-3 text-left bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl text-[11px] transition-colors border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-2">
+                            <i class="fa-solid fa-code text-indigo-500"></i>
+                            <span>Código Formatado com Syntax</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Attachment Preview Bar -->
+            <div id="attachment-preview" class="hidden px-4 py-2 bg-slate-100/80 dark:bg-slate-800/80 border-t border-ios-border dark:border-ios-darkBorder flex items-center gap-3 overflow-x-auto">
+                <!-- Preview items inserted via JS -->
+            </div>
+
+            <!-- Footer Input -->
+            <footer class="p-3 glass border-t border-ios-border dark:border-ios-darkBorder shrink-0">
+                <form id="chat-form" onsubmit="handleSend(event)" class="flex flex-col gap-2">
+                    
+                    <div class="flex items-end gap-2 bg-slate-100 dark:bg-slate-800/70 rounded-3xl p-1.5 border border-slate-200/60 dark:border-slate-700/60 focus-within:ring-2 focus-within:ring-ios-blue/40 transition-all">
+                        
+                        <!-- File Upload Button -->
+                        <label title="Anexar Mídia (Imagem, GIF, Vídeo, Áudio, Doc)" class="w-8 h-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-ios-gray hover:text-ios-blue cursor-pointer transition-colors shrink-0">
+                            <i class="fa-solid fa-paperclip text-sm"></i>
+                            <input type="file" id="file-input" onchange="handleFileSelect(event)" class="hidden" accept="image/*,video/*,audio/*,.pdf,.txt" multiple>
+                        </label>
+
+                        <!-- Mic Recognition -->
+                        <button type="button" onclick="toggleVoiceInput()" id="mic-btn" title="Ditado por Voz" class="w-8 h-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-ios-gray hover:text-rose-500 transition-colors shrink-0">
+                            <i class="fa-solid fa-microphone text-sm"></i>
+                        </button>
+
+                        <!-- Textarea Input -->
+                        <textarea 
+                            id="user-input" 
+                            rows="1" 
+                            placeholder="Digite sua mensagem (**negrito**, *itálico*, etc)..." 
+                            onkeydown="handleKeyDown(event)"
+                            oninput="autoResizeTextarea(this)"
+                            class="flex-1 bg-transparent border-0 focus:ring-0 resize-none max-h-32 px-2 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-ios-gray outline-none"
+                        ></textarea>
+
+                        <!-- Send Button -->
+                        <button type="submit" id="send-btn" class="w-8 h-8 rounded-full bg-ios-blue hover:bg-blue-600 disabled:opacity-40 text-white flex items-center justify-center transition-all shadow-md shrink-0">
+                            <i class="fa-solid fa-arrow-up text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- Toolbar Formatting Hints -->
+                    <div class="flex items-center justify-between px-2 text-[10px] text-ios-gray font-medium">
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="insertFormatting('**', '**')" class="hover:text-slate-800 dark:hover:text-slate-200 font-bold">B</button>
+                            <button type="button" onclick="insertFormatting('*', '*')" class="hover:text-slate-800 dark:hover:text-slate-200 italic">I</button>
+                            <button type="button" onclick="insertFormatting('`', '`')" class="hover:text-slate-800 dark:hover:text-slate-200 font-mono">&lt;&gt;</button>
+                            <button type="button" onclick="insertFormatting('```\n', '\n```')" class="hover:text-slate-800 dark:hover:text-slate-200 font-mono">Code</button>
+                        </div>
+                        <span>Shift + Enter para nova linha</span>
+                    </div>
+
+                </form>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden">
+        <div class="modal-container bg-white dark:bg-ios-darkCard w-full max-w-sm rounded-3xl p-5 border border-ios-border dark:border-ios-darkBorder shadow-2xl transition-all transform scale-95 opacity-0 space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-ios-border dark:border-ios-darkBorder pb-3">
+                <h3 class="font-semibold text-sm">Configurações & Personalidade</h3>
+                <button onclick="closeSettings()" class="text-ios-gray hover:text-slate-900 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <!-- System Security Note -->
+                <div class="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-300">
+                    <i class="fa-solid fa-shield-halved text-base shrink-0"></i>
+                    <p class="text-[11px] leading-tight"><strong>Chave Protegida:</strong> A chave de API foi oculta do menu para garantir a sua segurança e impedir cópias.</p>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-ios-gray uppercase tracking-wider block mb-1">Preset de Personalidade</label>
+                    <select id="modal-personality-select" onchange="applyPersonalityPreset(this.value)" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-ios-blue outline-none font-medium">
+                        <option value="default">Afrão Padrão (Assistente iOS)</option>
+                        <option value="programmer">Dev Senior (Especialista Código)</option>
+                        <option value="creative">Escritor Criativo & Poeta</option>
+                        <option value="sarcastic">Afrão Sarcástico & Irônico</option>
+                        <option value="teacher">Professor Explicativo</option>
+                        <option value="custom">Personalidade Customizada</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-ios-gray uppercase tracking-wider block mb-1">Prompt de Personalidade (Persona)</label>
+                    <textarea id="system-prompt-input" rows="4" placeholder="Ex: Você é o Afrão IA, fale de forma divertida..." class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs focus:ring-1 focus:ring-ios-blue outline-none resize-none leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+                    <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Sintetizador de Voz (TTS)</span>
+                    <input type="checkbox" id="tts-toggle-checkbox" onchange="toggleTTS(this.checked)" class="w-4 h-4 text-ios-blue rounded">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveSettings()" class="flex-1 bg-ios-blue text-white text-xs font-medium py-2.5 rounded-xl shadow-md hover:bg-blue-600 transition-colors">
+                    Salvar Alterações
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Default Personalities Preset
+        const PERSONALITIES = {
+            default: "Você é o Afrão IA, um assistente virtual moderno, inteligente e educado com design e estilo iOS. Você sabe usar formatação rica em Markdown perfeitamente como **negrito**, *itálico*, listas, tabelas e blocos de código. Responda sempre em Português do Brasil de forma clara e organizada.",
+            programmer: "Você é o Afrão IA em modo Dev Senior. Forneça respostas focadas em programação com código limpo, eficiente, bem comentado e formatado dentro de blocos Markdown (```linguagem). Explique arquitetura de forma técnica e precisa.",
+            creative: "Você é o Afrão IA em modo Escritor Criativo. Suas respostas devem ser poéticas, bem elaboradas, ricas em metáforas e uso elegante da língua portuguesa, usando formatação estilizada.",
+            sarcastic: "Você é o Afrão IA em modo Sarcástico. Você responde com ironia fina, bom humor ácido, mas sem deixar de dar a resposta correta e útil. Use formatação dinâmica.",
+            teacher: "Você é o Afrão IA em modo Professor. Explique conceitos complexos em etapas didáticas, usando analogias simples, exemplos práticos e formatação estruturada com tópicos e **destaques**."
+        };
+
+        // State Management
+        let chats = JSON.parse(localStorage.getItem('afrao_chats')) || [];
+        let activeChatId = localStorage.getItem('afrao_active_chat') || null;
+        let selectedPersonalityKey = localStorage.getItem('afrao_personality_key') || 'default';
+        let systemPrompt = localStorage.getItem('afrao_system_prompt') || PERSONALITIES.default;
+        let ttsEnabled = localStorage.getItem('afrao_tts') === 'true';
+
+        // Temporary Attachments array
+        let attachedFiles = [];
+        let isRecording = false;
+        let recognition = null;
+
+        // Elements
+        const chatListEl = document.getElementById('chat-list');
+        const messagesContainer = document.getElementById('messages-container');
+        const emptyState = document.getElementById('empty-state');
+        const currentChatTitleEl = document.getElementById('current-chat-title');
+        const currentPersonalityBadge = document.getElementById('current-personality-badge');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const systemPromptInput = document.getElementById('system-prompt-input');
+        const sidebarPersonalitySelect = document.getElementById('sidebar-personality-select');
+        const modalPersonalitySelect = document.getElementById('modal-personality-select');
+        const attachmentPreview = document.getElementById('attachment-preview');
+        const micBtn = document.getElementById('mic-btn');
+        const ttsBtn = document.getElementById('tts-btn');
+        const ttsCheckbox = document.getElementById('tts-toggle-checkbox');
+
+        // Initial Boot
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initSpeechRecognition();
+            updateTTSUI();
+
+            if (chats.length === 0) {
+                createNewChat("Nova Conversa", false);
+            } else {
+                if (!activeChatId || !chats.find(c => c.id === activeChatId)) {
+                    activeChatId = chats[0].id;
+                }
+                renderChatList();
+                renderMessages();
+            }
+
+            sidebarPersonalitySelect.value = selectedPersonalityKey;
+            modalPersonalitySelect.value = selectedPersonalityKey;
+            systemPromptInput.value = systemPrompt;
+            updatePersonalityBadge();
+        });
+
+        // Theme Switcher
+        function initTheme() {
+            const isDark = localStorage.getItem('afrao_theme') === 'dark' || 
+                (!('afrao_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                updateThemeUI(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeUI(false);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('afrao_theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
+        }
+
+        function updateThemeUI(isDark) {
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            if (isDark) {
+                themeIcon.className = 'fa-solid fa-sun text-sm text-amber-400';
+                themeText.textContent = 'Modo Claro';
+            } else {
+                themeIcon.className = 'fa-solid fa-moon text-sm text-slate-600';
+                themeText.textContent = 'Modo Escuro';
+            }
+        }
+
+        // Voice Recognition (STT)
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'pt-BR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    micBtn.classList.add('text-rose-500', 'pulse-mic');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value += (userInput.value ? ' ' : '') + transcript;
+                    autoResizeTextarea(userInput);
+                };
+
+                recognition.onerror = () => {
+                    stopRecording();
+                };
+
+                recognition.onend = () => {
+                    stopRecording();
+                };
+            } else {
+                micBtn.style.display = 'none';
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) return;
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            micBtn.classList.remove('text-rose-500', 'pulse-mic');
+        }
+
+        // Speech Synthesis (TTS)
+        function toggleTTS(state) {
+            ttsEnabled = state !== undefined ? state : !ttsEnabled;
+            localStorage.setItem('afrao_tts', ttsEnabled);
+            updateTTSUI();
+        }
+
+        function updateTTSUI() {
+            if (ttsBtn) {
+                ttsBtn.className = ttsEnabled 
+                    ? 'text-xs font-medium text-ios-blue transition-colors w-8 h-8 rounded-full flex items-center justify-center bg-ios-blue/10'
+                    : 'text-xs font-medium text-ios-gray hover:text-ios-blue transition-colors w-8 h-8 rounded-full flex items-center justify-center';
+            }
+            if (ttsCheckbox) ttsCheckbox.checked = ttsEnabled;
+        }
+
+        function speakText(text) {
+            if (!ttsEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            
+            // Strip HTML/Markdown tags for clean speech
+            const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[*_#`]/g, '');
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Attachment Handling
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const type = file.type.split('/')[0];
+                    attachedFiles.push({
+                        name: file.name,
+                        type: file.type,
+                        category: type,
+                        dataUrl: event.target.result
+                    });
+                    renderAttachmentPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        function removeAttachment(index) {
+            attachedFiles.splice(index, 1);
+            renderAttachmentPreviews();
+        }
+
+        function renderAttachmentPreviews() {
+            if (attachedFiles.length === 0) {
+                attachmentPreview.classList.add('hidden');
+                attachmentPreview.innerHTML = '';
+                return;
+            }
+
+            attachmentPreview.classList.remove('hidden');
+            attachmentPreview.innerHTML = '';
+
+            attachedFiles.forEach((file, idx) => {
+                const item = document.createElement('div');
+                item.className = 'relative shrink-0 flex items-center gap-2 p-1.5 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 text-xs shadow-xs';
+                
+                let previewContent = '';
+                if (file.category === 'image') {
+                    previewContent = `<img src="${file.dataUrl}" class="w-8 h-8 object-cover rounded-lg">`;
+                } else if (file.category === 'video') {
+                    previewContent = `<div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center"><i class="fa-solid fa-film text-xs"></i></div>`;
+                } else if (file.category === 'audio') {
+                    previewContent = `<div class="w-8 h-8 bg-emerald-500 text-white rounded-lg flex items-center justify-center"><i class="fa-solid fa-music text-xs"></i></div>`;
+                } else {
+                    previewContent = `<div class="w-8 h-8 bg-ios-blue text-white rounded-lg flex items-center justify-center"><i class="fa-solid fa-file text-xs"></i></div>`;
+                }
+
+                item.innerHTML = `
+                    ${previewContent}
+                    <span class="truncate max-w-[100px] text-[10px] font-medium">${escapeHtml(file.name)}</span>
+                    <button type="button" onclick="removeAttachment(${idx})" class="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-600 hover:bg-rose-500 hover:text-white flex items-center justify-center text-[9px] transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                attachmentPreview.appendChild(item);
+            });
+        }
+
+        // Personality Logic
+        function changePersonality(key) {
+            selectedPersonalityKey = key;
+            sidebarPersonalitySelect.value = key;
+            modalPersonalitySelect.value = key;
+
+            if (key !== 'custom' && PERSONALITIES[key]) {
+                systemPrompt = PERSONALITIES[key];
+                systemPromptInput.value = systemPrompt;
+            }
+
+            localStorage.setItem('afrao_personality_key', key);
+            localStorage.setItem('afrao_system_prompt', systemPrompt);
+            updatePersonalityBadge();
+        }
+
+        function applyPersonalityPreset(key) {
+            changePersonality(key);
+        }
+
+        function updatePersonalityBadge() {
+            const names = {
+                default: 'Padrão',
+                programmer: 'Dev Senior',
+                creative: 'Criativo',
+                sarcastic: 'Sarcástico',
+                teacher: 'Professor',
+                custom: 'Personalizado'
+            };
+            currentPersonalityBadge.textContent = `Afrão IA • ${names[selectedPersonalityKey] || 'Personalizado'}`;
+        }
+
+        // Chat List & Storage
+        function saveChats() {
+            localStorage.setItem('afrao_chats', JSON.stringify(chats));
+            localStorage.setItem('afrao_active_chat', activeChatId);
+        }
+
+        function createNewChat(title = "Nova Conversa", switchChat = true) {
+            const newChat = {
+                id: 'chat_' + Date.now(),
+                title: title,
+                messages: []
+            };
+            chats.unshift(newChat);
+            if (switchChat) {
+                activeChatId = newChat.id;
+            }
+            saveChats();
+            renderChatList();
+            renderMessages();
+            toggleSidebar(false);
+        }
+
+        function switchChat(id) {
+            activeChatId = id;
+            saveChats();
+            renderChatList();
+            renderMessages();
+            toggleSidebar(false);
+        }
+
+        function renameChat(id, e) {
+            e.stopPropagation();
+            const chat = chats.find(c => c.id === id);
+            if (!chat) return;
+            const newTitle = prompt("Renomear conversa:", chat.title);
+            if (newTitle && newTitle.trim()) {
+                chat.title = newTitle.trim();
+                saveChats();
+                renderChatList();
+                if (activeChatId === id) {
+                    currentChatTitleEl.textContent = chat.title;
+                }
+            }
+        }
+
+        function deleteChat(id, e) {
+            e.stopPropagation();
+            if (chats.length <= 1) {
+                alert("Você deve manter pelo menos uma conversa ativa.");
+                return;
+            }
+            chats = chats.filter(c => c.id !== id);
+            if (activeChatId === id) {
+                activeChatId = chats[0].id;
+            }
+            saveChats();
+            renderChatList();
+            renderMessages();
+        }
+
+        function clearCurrentChat() {
+            const chat = chats.find(c => c.id === activeChatId);
+            if (chat) {
+                chat.messages = [];
+                saveChats();
+                renderMessages();
+            }
+        }
+
+        function renderChatList() {
+            chatListEl.innerHTML = '';
+            chats.forEach(chat => {
+                const isActive = chat.id === activeChatId;
+                const item = document.createElement('div');
+                item.className = `group flex items-center justify-between p-2.5 rounded-2xl cursor-pointer text-xs transition-all ${
+                    isActive 
+                    ? 'bg-ios-blue text-white font-medium shadow-sm' 
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                }`;
+                item.onclick = () => switchChat(chat.id);
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <i class="fa-regular fa-message ${isActive ? 'text-white' : 'text-ios-gray'}"></i>
+                        <span class="truncate">${escapeHtml(chat.title)}</span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="renameChat('${chat.id}', event)" class="p-1 hover:text-amber-300">
+                            <i class="fa-solid fa-pen text-[10px]"></i>
+                        </button>
+                        <button onclick="deleteChat('${chat.id}', event)" class="p-1 hover:text-rose-300">
+                            <i class="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    </div>
+                `;
+                chatListEl.appendChild(item);
+            });
+        }
+
+        function renderMessages() {
+            const chat = chats.find(c => c.id === activeChatId);
+            messagesContainer.innerHTML = '';
+
+            if (!chat || chat.messages.length === 0) {
+                messagesContainer.appendChild(emptyState);
+                emptyState.classList.remove('hidden');
+                currentChatTitleEl.textContent = chat ? chat.title : "Nova Conversa";
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            currentChatTitleEl.textContent = chat.title;
+
+            chat.messages.forEach(msg => {
+                appendMessageToDOM(msg.role, msg.content, msg.attachments);
+            });
+            scrollToBottom();
+        }
+
+        function appendMessageToDOM(role, content, attachments = []) {
+            emptyState.classList.add('hidden');
+            const wrapper = document.createElement('div');
+            const isUser = role === 'user';
+
+            wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`;
+
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[85%] sm:max-w-[80%] rounded-3xl px-4 py-3 text-xs shadow-xs transition-all ${
+                isUser 
+                ? 'bg-ios-blue text-white rounded-br-md font-normal' 
+                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 rounded-bl-md border border-slate-200/50 dark:border-slate-700/50'
+            }`;
+
+            // Attachments Display
+            if (attachments && attachments.length > 0) {
+                const mediaGrid = document.createElement('div');
+                mediaGrid.className = 'flex flex-wrap gap-2 mb-2';
+                
+                attachments.forEach(att => {
+                    if (att.category === 'image') {
+                        const img = document.createElement('img');
+                        img.src = att.dataUrl;
+                        img.className = 'max-w-xs max-h-48 object-cover rounded-xl border border-white/20 shadow-xs';
+                        mediaGrid.appendChild(img);
+                    } else if (att.category === 'video') {
+                        const vid = document.createElement('video');
+                        vid.src = att.dataUrl;
+                        vid.controls = true;
+                        vid.className = 'max-w-xs max-h-48 rounded-xl border border-white/20';
+                        mediaGrid.appendChild(vid);
+                    } else if (att.category === 'audio') {
+                        const aud = document.createElement('audio');
+                        aud.src = att.dataUrl;
+                        aud.controls = true;
+                        aud.className = 'max-w-xs h-10 rounded-xl';
+                        mediaGrid.appendChild(aud);
+                    } else {
+                        const fileBadge = document.createElement('div');
+                        fileBadge.className = 'p-2 bg-black/10 dark:bg-white/10 rounded-xl flex items-center gap-2';
+                        fileBadge.innerHTML = `<i class="fa-solid fa-file"></i> <span>${escapeHtml(att.name)}</span>`;
+                        mediaGrid.appendChild(fileBadge);
+                    }
+                });
+                bubble.appendChild(mediaGrid);
+            }
+
+            // Message Body Text
+            if (isUser) {
+                const textNode = document.createElement('div');
+                textNode.className = 'whitespace-pre-wrap leading-relaxed';
+                textNode.textContent = content;
+                bubble.appendChild(textNode);
+            } else {
+                const prose = document.createElement('div');
+                prose.className = 'prose dark:prose-invert max-w-none';
+                prose.innerHTML = marked.parse(content);
+                
+                // Highlight Code Blocks
+                prose.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+
+                bubble.appendChild(prose);
+            }
+
+            wrapper.appendChild(bubble);
+            messagesContainer.appendChild(wrapper);
+            scrollToBottom();
+            return wrapper;
+        }
+
+        // Messaging Engine (Gemini Native Integration)
+        async function handleSend(e) {
+            if (e) e.preventDefault();
+
+            const text = userInput.value.trim();
+            if (!text && attachedFiles.length === 0) return;
+
+            const chat = chats.find(c => c.id === activeChatId);
+            if (!chat) return;
+
+            if (chat.messages.length === 0 && chat.title === "Nova Conversa") {
+                chat.title = text.length > 20 ? text.substring(0, 20) + "..." : (attachedFiles[0]?.name || "Anexo Mídia");
+                renderChatList();
+            }
+
+            const currentAttachments = [...attachedFiles];
+            chat.messages.push({ role: 'user', content: text, attachments: currentAttachments });
+            appendMessageToDOM('user', text, currentAttachments);
+
+            // Clear Input state
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            attachedFiles = [];
+            renderAttachmentPreviews();
+            sendBtn.disabled = true;
+
+            const assistantWrapper = appendMessageToDOM('assistant', '<i class="fa-solid fa-sparkles fa-spin text-ios-blue"></i> Afrão está pensando...');
+            const bubbleEl = assistantWrapper.querySelector('.prose') || assistantWrapper.querySelector('div');
+
+            try {
+                // Prepare Gemini payload
+                const contents = [];
+
+                // System Instruction embedded as part of context
+                const chatHistory = chat.messages.map(m => {
+                    const parts = [];
+                    if (m.content) parts.push({ text: m.content });
+                    
+                    if (m.attachments) {
+                        m.attachments.forEach(att => {
+                            if (att.category === 'image') {
+                                const base64Data = att.dataUrl.split(',')[1];
+                                if (base64Data) {
+                                    parts.push({
+                                        inlineData: {
+                                            mimeType: att.type || "image/png",
+                                            data: base64Data
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                    return {
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: parts.length > 0 ? parts : [{ text: ' ' }]
+                    };
+                });
+
+                const payload = {
+                    contents: chatHistory,
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    }
+                };
+
+                const apiKey = ""; // Canvas runtime environment automatically provides Gemini API Key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error?.message || `Erro HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                const aiText = candidate?.content?.parts?.[0]?.text;
+
+                if (aiText) {
+                    chat.messages.push({ role: 'assistant', content: aiText });
+                    bubbleEl.innerHTML = marked.parse(aiText);
+                    
+                    // Code syntax highlight
+                    bubbleEl.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+
+                    speakText(aiText);
+                } else {
+                    throw new Error("Não foi possível obter a resposta.");
+                }
+
+            } catch (err) {
+                console.error("Erro na API Gemini:", err);
+                let errorMsg = `Afrão não conseguiu responder: ${err.message}`;
+                bubbleEl.innerHTML = `<span class="text-rose-500 font-medium">${escapeHtml(errorMsg)}</span>`;
+            } finally {
+                sendBtn.disabled = false;
+                saveChats();
+                scrollToBottom();
+            }
+        }
+
+        // Helpers & Text Formatting Shortcuts
+        function insertFormatting(startTag, endTag) {
+            const start = userInput.selectionStart;
+            const end = userInput.selectionEnd;
+            const text = userInput.value;
+            const selectedText = text.substring(start, end) || 'texto';
+
+            userInput.value = text.substring(0, start) + startTag + selectedText + endTag + text.substring(end);
+            userInput.focus();
+            userInput.selectionStart = start + startTag.length;
+            userInput.selectionEnd = start + startTag.length + selectedText.length;
+            autoResizeTextarea(userInput);
+        }
+
+        function usePrompt(text) {
+            userInput.value = text;
+            autoResizeTextarea(userInput);
+            handleSend();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        }
+
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function toggleSidebar(show) {
+            if (show === undefined) {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            } else if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebarOverlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            }
+        }
+
+        function openSettings() {
+            settingsModal.classList.remove('hidden');
+            setTimeout(() => {
+                settingsModal.querySelector('.modal-container').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeSettings() {
+            const container = settingsModal.querySelector('.modal-container');
+            container.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                settingsModal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveSettings() {
+            systemPrompt = systemPromptInput.value.trim() || PERSONALITIES.default;
+            if (systemPrompt !== PERSONALITIES[selectedPersonalityKey]) {
+                selectedPersonalityKey = 'custom';
+                sidebarPersonalitySelect.value = 'custom';
+                modalPersonalitySelect.value = 'custom';
+            }
+
+            localStorage.setItem('afrao_system_prompt', systemPrompt);
+            localStorage.setItem('afrao_personality_key', selectedPersonalityKey);
+            updatePersonalityBadge();
+            closeSettings();
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
